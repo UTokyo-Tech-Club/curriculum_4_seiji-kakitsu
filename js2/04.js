@@ -5,17 +5,17 @@ for (let i = 0; i < 100; i++) {
 
 const fizzBuzz = range.map((el) => {
     if (el % 15 == 0) {
-        const a = "Fizz Buzz";
-        return a;
+        return "Fizz Buzz";
+        
     } else if (el % 3 == 0 && el % 5 !=0) {
-        const a = "Fizz";
-        return a;
+        return "Fizz";
+        
     } else if (el % 3 != 0 && el % 5 == 0) {
-        const a = "Buzz";
-        return a;
+        return "Buzz";
+        
     } else {
-        const a = el;
-        return a;
+        return el;
+        
     }
 });
 
