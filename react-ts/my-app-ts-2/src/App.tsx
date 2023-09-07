@@ -1,4 +1,3 @@
-
 import React from "react";
 import logo from "./logo.svg";
 import "./App.css";
@@ -18,9 +17,17 @@ function App() {
         },
       }
     );
-    const data = await response.json();
-    const obj = Object.values<{name:string, age:number}>(data).filter((v) => v.name === "inada")[0];
-    setAge(obj.age + 10);
+    interface UserData {
+      name: string;
+      age: number;
+    }
+    const data:UserData = await response.json();
+    const obj = Object.values(data).filter((v) => v.name === "inada")[0];
+    if (typeof obj.age === "number") {
+      setAge(obj.age + 10);
+    } else {
+      setAge(parseInt(obj.age) + 10);
+    }
   };
 
   return (
