@@ -1,0 +1,8 @@
+FROM ubuntu:latest
+WORKDIR /
+COPY os9.txt /
+RUN mkdir obento && \
+    cd obento && \
+    touch onigiri.txt && \
+    echo "鮭" > onigiri.txt
+CMD ["cat", "obento/onigiri.txt"]
