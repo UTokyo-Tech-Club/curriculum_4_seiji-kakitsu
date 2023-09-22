@@ -1,5 +1,4 @@
 FROM ubuntu:latest
-WORKDIR /
 COPY os9.txt /
 RUN mkdir obento && \
     cd obento && \
