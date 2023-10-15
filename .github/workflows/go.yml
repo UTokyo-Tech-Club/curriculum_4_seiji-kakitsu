@@ -14,7 +14,8 @@ defaults:
     working-directory: ut
 
 jobs:
-  runs-on: ubuntu-latest
-  steps:
-  - name: UnitTest
-    run: go run fizzbuzz_test.go
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: UnitTest
+      run: go run fizzbuzz_test.go
