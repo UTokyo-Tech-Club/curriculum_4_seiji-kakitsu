@@ -23,5 +23,8 @@ jobs:
           go-version: 1.18     
       - name: Run Unit Tests
         working-directory: ut
-        run: go test -v ./...       
+        run: |
+          go build -v ./...
+          go test -v ./...    
+             
       
