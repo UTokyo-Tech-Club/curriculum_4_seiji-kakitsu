@@ -12,6 +12,7 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	"unicode/utf8"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -113,7 +114,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if len(requestData.Name) > 50 {
+		if utf8.RuneCountInString(requestData.Name) > 50 {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
