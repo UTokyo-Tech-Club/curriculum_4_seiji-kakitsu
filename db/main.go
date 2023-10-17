@@ -47,6 +47,14 @@ func init() {
 func handler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
+		// トランザクションを開始
+		tx, err := db.Begin()
+		if err != nil {
+			log.Printf("fail: db.Begin, %v\n", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		defer tx.Rollback()
 		// ②-1
 		name := r.URL.Query().Get("name") // To be filled
 		if name == "" {
@@ -56,7 +64,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// ②-2
-		rows, err := db.Query("SELECT id, name, age FROM user WHERE name = ?", name)
+		rows, err := tx.Query("SELECT id, name, age FROM user WHERE name = ?", name)
 		if err != nil {
 			log.Printf("fail: db.Query, %v\n", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -78,6 +86,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			}
 			users = append(users, u)
 		}
+		// トランザクションをコミット
+		if err := tx.Commit(); err != nil {
+			log.Printf("fail: tx.Commit, %v\n", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
 		// ②-4
 		bytes, err := json.Marshal(users)
@@ -89,6 +103,15 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(bytes)
 	case http.MethodPost:
+		//トランザクションを開始
+		tx, err := db.Begin()
+		if err != nil {
+			log.Printf("fail: db.Begin, %v\n", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		defer tx.Rollback()
+
 		// POSTメソッドの処理
 		t := time.Now()
 		entropy := ulid.Monotonic(rand.New(rand.NewSource(t.UnixNano())), 0)
@@ -124,13 +147,22 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// データベースにINSERT
-		_, err := db.Exec("INSERT INTO user (id, name, age) VALUES (?,?, ?)", id.String(), requestData.Name, requestData.Age)
+		_, err = tx.Exec("INSERT INTO user (id, name, age) VALUES (?,?, ?)", id.String(), requestData.Name, requestData.Age)
 		if err != nil {
 			log.Printf("fail: db.Exec, %v\n", err)
 			w.WriteHeader(http.StatusInternalServerError)
+			if err := tx.Rollback(); err != nil {
+				log.Printf("fail: tx.Rollback, %v\n", err)
+			}
 			return
 		}
 
+		if err := tx.Commit(); err != nil {
+			log.Printf("fail: tx.Commit, %v\n", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		
 		// 成功した場合のレスポンス
 		w.WriteHeader(http.StatusOK)
 		response := map[string]string{"id": id.String()}
