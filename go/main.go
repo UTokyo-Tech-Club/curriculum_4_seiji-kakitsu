@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"strings"
-	"strconv"
 	"sort"
+	"strconv"
+	"strings"
 )
 
 // 文字列を整数の配列に変換する関数
@@ -25,7 +25,7 @@ func countNumberFrequency(a []int) map[int]int {
 	for _, n := range a {
 		m[n] += 1
 	}
-	return map1
+	return m
 }
 
 // 整数の合計をsにする方法が何通りあるかを数える関数
