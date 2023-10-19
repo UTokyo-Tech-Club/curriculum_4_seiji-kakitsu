@@ -22,7 +22,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	bytes, err := json.Marshal(responseMessage{
-		Message: "Hello, " + name + "!",
+		Message: "Hello, " + name + "-san",
 	})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
