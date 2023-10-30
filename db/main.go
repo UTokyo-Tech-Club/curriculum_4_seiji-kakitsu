@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/joho/godotenv"
 	"github.com/oklog/ulid/v2"
 	"log"
 	"math/rand"
@@ -12,8 +14,6 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-
-	_ "github.com/go-sql-driver/mysql"
 )
 
 type UserResForHTTPGet struct {
@@ -27,6 +27,10 @@ var db *sql.DB
 
 func init() {
 	// ①-1
+	err := godotenv.Load()
+	if err != nil {
+		panic("Error loading .env file")
+	}
 	mysqlUser := os.Getenv("MYSQL_USER")
 	mysqlUserPwd := os.Getenv("MYSQL_PASSWORD")
 	mysqlDatabase := os.Getenv("MYSQL_DATABASE")
