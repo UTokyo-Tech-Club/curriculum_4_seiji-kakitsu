@@ -16,10 +16,11 @@ import (
 	"time"
 )
 
-type UserResForHTTPGet struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
-	Age  int    `json:"age"`
+type ContentsData struct {
+	Class string `json:"class"`
+	Title string `json:"title"`
+	Body  string `json:"body"`
+	URL   string `json:"url"`
 }
 
 // ① GoプログラムからMySQLへ接続
@@ -36,7 +37,7 @@ func init() {
 	mysqlDatabase := os.Getenv("MYSQL_DATABASE")
 
 	// ①-2
-	_db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@(localhost:3306)/%s", mysqlUser, mysqlUserPwd, mysqlDatabase))
+	_db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(localhost:3306)/%s", mysqlUser, mysqlUserPwd, mysqlDatabase))
 	if err != nil {
 		log.Fatalf("fail: sql.Open, %v\n", err)
 	}
@@ -49,18 +50,34 @@ func init() {
 
 // ② /userでリクエストされたらnameパラメーターと一致する名前を持つレコードをJSON形式で返す
 func handler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	//この行を入れたらエラーが消えた
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 	switch r.Method {
 	case http.MethodGet:
 		// ②-1
-		name := r.URL.Query().Get("name") // To be filled
-		if name == "" {
-			log.Println("fail: name is empty")
+		//name := r.URL.Query().Get("name") // To be filled
+		//if name == "" {
+		//	log.Println("fail: name is empty")
+		//	w.WriteHeader(http.StatusBadRequest)
+		//	return
+		//}
+
+		class := r.URL.Query().Get("class")
+		if class == "" {
+			log.Println("fail: class is empty")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		// ②-2
-		rows, err := db.Query("SELECT id, name, age FROM user WHERE name = ?", name)
+		rows, err := db.Query("SELECT class, title, body, url FROM contents WHERE class = ?", class)
 		if err != nil {
 			log.Printf("fail: db.Query, %v\n", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -68,10 +85,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// ②-3
-		users := make([]UserResForHTTPGet, 0)
+		contents := make([]ContentsData, 0)
 		for rows.Next() {
-			var u UserResForHTTPGet
-			if err := rows.Scan(&u.Id, &u.Name, &u.Age); err != nil {
+			var u ContentsData
+			var body, url sql.NullString
+			if err := rows.Scan(&u.Class, &u.Title, &u.Body, &u.URL); err != nil {
 				log.Printf("fail: rows.Scan, %v\n", err)
 
 				if err := rows.Close(); err != nil { // 500を返して終了するが、その前にrowsのClose処理が必要
@@ -80,11 +98,17 @@ func handler(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-			users = append(users, u)
+			if body.Valid {
+				u.Body = body.String
+			}
+			if url.Valid {
+				u.URL = url.String
+			}
+			contents = append(contents, u)
 		}
 
 		// ②-4
-		bytes, err := json.Marshal(users)
+		bytes, err := json.Marshal(contents)
 		if err != nil {
 			log.Printf("fail: json.Marshal, %v\n", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -99,8 +123,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		id := ulid.MustNew(ulid.Timestamp(t), entropy)
 
 		var requestData struct {
-			Name string `json:"name"`
-			Age  int    `json:"age"`
+			Class string `json:"class"`
+			Title string `json:"title"`
+			Body  string `json:"body"`
+			URL   string `json:"url"`
 		}
 
 		// HTTPリクエストボディからJSONデータを読み取る
@@ -111,24 +137,30 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if requestData.Name == "" {
-			log.Println("fail: name is empty")
+		if requestData.Class == "" {
+			log.Println("fail: class is empty")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		if len(requestData.Name) > 50 {
+		if requestData.Title == "" {
+			log.Println("fail: title is empty")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		if requestData.Age < 20 || requestData.Age > 80 {
+		if len(requestData.Class) > 50 {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		if len(requestData.Title) > 50 {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		// データベースにINSERT
-		_, err := db.Exec("INSERT INTO user (id, name, age) VALUES (?,?, ?)", id.String(), requestData.Name, requestData.Age)
+		_, err := db.Exec("INSERT INTO contents (id, class, title, body, url) VALUES (?,?,?,?,?)", id.String(), requestData.Class, requestData.Title, requestData.Body, requestData.URL)
 		if err != nil {
 			log.Printf("fail: db.Exec, %v\n", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -161,9 +193,9 @@ func main() {
 	// ③ Ctrl+CでHTTPサーバー停止時にDBをクローズする
 	closeDBWithSysCall()
 
-	// 8000番ポートでリクエストを待ち受ける
+	// 8050番ポートでリクエストを待ち受ける
 	log.Println("Listening...")
-	if err := http.ListenAndServe(":8000", nil); err != nil {
+	if err := http.ListenAndServe(":8050", nil); err != nil {
 		log.Fatal(err)
 	}
 }
