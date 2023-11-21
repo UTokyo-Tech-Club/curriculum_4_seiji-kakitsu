@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 )
@@ -11,7 +10,7 @@ func main() {
 	dir := os.Args[1]
 
 	if err := cd(dir); err != nil {
-		files, _ := ioutil.ReadDir("./")
+		files, _ := os.ReadDir("./")
 		var a []string
 		for _, file := range files {
 			if file.IsDir() {
