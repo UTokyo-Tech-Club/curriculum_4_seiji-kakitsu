@@ -17,6 +17,7 @@ func main() {
 				a = append(a, file.Name())
 			}
 		}
+
 		dirs := strings.Join(a, ", ")
 		if a != nil {
 			fmt.Printf("fail: %s, 指定可能なサブディレクトリ: %s\n", err.Error(), dirs)
