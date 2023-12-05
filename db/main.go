@@ -4,8 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/joho/godotenv"
 	"github.com/oklog/ulid/v2"
 	"log"
 	"math/rand"
@@ -14,13 +12,14 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
-type ContentsData struct {
-	Class string `json:"class"`
-	Title string `json:"title"`
-	Body  string `json:"body"`
-	URL   string `json:"url"`
+type UserResForHTTPGet struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+	Age  int    `json:"age"`
 }
 
 // ① GoプログラムからMySQLへ接続
@@ -28,16 +27,12 @@ var db *sql.DB
 
 func init() {
 	// ①-1
-	err := godotenv.Load()
-	if err != nil {
-		panic("Error loading .env file")
-	}
 	mysqlUser := os.Getenv("MYSQL_USER")
 	mysqlUserPwd := os.Getenv("MYSQL_PASSWORD")
 	mysqlDatabase := os.Getenv("MYSQL_DATABASE")
 
 	// ①-2
-	_db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(localhost:3306)/%s", mysqlUser, mysqlUserPwd, mysqlDatabase))
+	_db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@(localhost:3306)/%s", mysqlUser, mysqlUserPwd, mysqlDatabase))
 	if err != nil {
 		log.Fatalf("fail: sql.Open, %v\n", err)
 	}
@@ -50,46 +45,55 @@ func init() {
 
 // ② /userでリクエストされたらnameパラメーターと一致する名前を持つレコードをJSON形式で返す
 func handler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-
-	//この行を入れたらエラーが消えた
-	if r.Method == http.MethodOptions {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
 	switch r.Method {
 	case http.MethodGet:
+		// トランザクションを開始
+		tx, err := db.Begin()
+		if err != nil {
+			log.Printf("fail: db.Begin, %v\n", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		defer func() {
+			// 関数が終了する際にトランザクションをコミットまたはロールバック
+			if r := recover(); r != nil {
+				// パニックが発生した場合はロールバック
+				tx.Rollback()
+				log.Printf("fail: Transaction rolled back due to panic: %v\n", r)
+			} else if err != nil {
+				// エラーが発生した場合はロールバック
+				tx.Rollback()
+				log.Printf("fail: Transaction rolled back due to error: %v\n", err)
+			} else {
+				// 成功した場合はトランザクションをコミット
+				if err := tx.Commit(); err != nil {
+					log.Printf("fail: tx.Commit, %v\n", err)
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+			}
+		}()
 		// ②-1
-		//name := r.URL.Query().Get("name") // To be filled
-		//if name == "" {
-		//	log.Println("fail: name is empty")
-		//	w.WriteHeader(http.StatusBadRequest)
-		//	return
-		//}
-
-		class := r.URL.Query().Get("class")
-		if class == "" {
-			log.Println("fail: class is empty")
+		name := r.URL.Query().Get("name") // To be filled
+		if name == "" {
+			log.Println("fail: name is empty")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		// ②-2
-		rows, err := db.Query("SELECT class, title, body, url FROM contents WHERE class = ?", class)
+		rows, err := tx.Query("SELECT id, name, age FROM user WHERE name = ?", name)
 		if err != nil {
-			log.Printf("fail: db.Query, %v\n", err)
+			log.Printf("fail: tx.Query, %v\n", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
 		// ②-3
-		contents := make([]ContentsData, 0)
+		users := make([]UserResForHTTPGet, 0)
 		for rows.Next() {
-			var u ContentsData
-			var body, url sql.NullString
-			if err := rows.Scan(&u.Class, &u.Title, &u.Body, &u.URL); err != nil {
+			var u UserResForHTTPGet
+			if err := rows.Scan(&u.Id, &u.Name, &u.Age); err != nil {
 				log.Printf("fail: rows.Scan, %v\n", err)
 
 				if err := rows.Close(); err != nil { // 500を返して終了するが、その前にrowsのClose処理が必要
@@ -98,17 +102,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-			if body.Valid {
-				u.Body = body.String
-			}
-			if url.Valid {
-				u.URL = url.String
-			}
-			contents = append(contents, u)
+			users = append(users, u)
 		}
 
 		// ②-4
-		bytes, err := json.Marshal(contents)
+		bytes, err := json.Marshal(users)
 		if err != nil {
 			log.Printf("fail: json.Marshal, %v\n", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -117,16 +115,40 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(bytes)
 	case http.MethodPost:
+		// トランザクションを開始
+		tx, err := db.Begin()
+		if err != nil {
+			log.Printf("fail: db.Begin, %v\n", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		defer func() {
+			// 関数が終了する際にトランザクションをコミットまたはロールバック
+			if r := recover(); r != nil {
+				// パニックが発生した場合はロールバック
+				tx.Rollback()
+				log.Printf("fail: Transaction rolled back due to panic: %v\n", r)
+			} else if err != nil {
+				// エラーが発生した場合はロールバック
+				tx.Rollback()
+				log.Printf("fail: Transaction rolled back due to error: %v\n", err)
+			} else {
+				// 成功した場合はトランザクションをコミット
+				if err := tx.Commit(); err != nil {
+					log.Printf("fail: tx.Commit, %v\n", err)
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+			}
+		}()
 		// POSTメソッドの処理
 		t := time.Now()
 		entropy := ulid.Monotonic(rand.New(rand.NewSource(t.UnixNano())), 0)
 		id := ulid.MustNew(ulid.Timestamp(t), entropy)
 
 		var requestData struct {
-			Class string `json:"class"`
-			Title string `json:"title"`
-			Body  string `json:"body"`
-			URL   string `json:"url"`
+			Name string `json:"name"`
+			Age  int    `json:"age"`
 		}
 
 		// HTTPリクエストボディからJSONデータを読み取る
@@ -137,32 +159,26 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if requestData.Class == "" {
-			log.Println("fail: class is empty")
+		if requestData.Name == "" {
+			log.Println("fail: name is empty")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		if requestData.Title == "" {
-			log.Println("fail: title is empty")
+		if len(requestData.Name) > 50 {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		if len(requestData.Class) > 50 {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		if len(requestData.Title) > 50 {
+		if requestData.Age < 20 || requestData.Age > 80 {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		// データベースにINSERT
-		_, err := db.Exec("INSERT INTO contents (id, class, title, body, url) VALUES (?,?,?,?,?)", id.String(), requestData.Class, requestData.Title, requestData.Body, requestData.URL)
+		_, err = tx.Exec("INSERT INTO user (id, name, age) VALUES (?,?, ?)", id.String(), requestData.Name, requestData.Age)
 		if err != nil {
-			log.Printf("fail: db.Exec, %v\n", err)
+			log.Printf("fail: tx.Exec, %v\n", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -193,9 +209,9 @@ func main() {
 	// ③ Ctrl+CでHTTPサーバー停止時にDBをクローズする
 	closeDBWithSysCall()
 
-	// 8050番ポートでリクエストを待ち受ける
+	// 8000番ポートでリクエストを待ち受ける
 	log.Println("Listening...")
-	if err := http.ListenAndServe(":8050", nil); err != nil {
+	if err := http.ListenAndServe(":8000", nil); err != nil {
 		log.Fatal(err)
 	}
 }
