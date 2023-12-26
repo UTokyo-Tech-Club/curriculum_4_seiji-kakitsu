@@ -4,7 +4,16 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="cebc9744-db26-4740-9a5a-744bb8b3bc7c" name="Changes" comment="" />
+    <list default="true" id="cebc9744-db26-4740-9a5a-744bb8b3bc7c" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/db/controller/register_user_controller.go" beforeDir="false" afterPath="$PROJECT_DIR$/db/controller/register_user_controller.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/db/controller/search_user_controller.go" beforeDir="false" afterPath="$PROJECT_DIR$/db/controller/search_user_controller.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/db/dao/user_dao.go" beforeDir="false" afterPath="$PROJECT_DIR$/db/dao/user_dao.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/db/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/db/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/db/model/user.go" beforeDir="false" afterPath="$PROJECT_DIR$/db/model/user.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/db/usecase/register_user_usecase.go" beforeDir="false" afterPath="$PROJECT_DIR$/db/usecase/register_user_usecase.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/db/usecase/search_user_usecase.go" beforeDir="false" afterPath="$PROJECT_DIR$/db/usecase/search_user_usecase.go" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -17,7 +26,7 @@
       </list>
     </option>
   </component>
-  <component name="GOROOT" url="file://$PROJECT_DIR$/../sdk/go1.21.1" />
+  <component name="GOROOT" url="file:///opt/homebrew/opt/go/libexec" />
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
@@ -41,9 +50,11 @@
     "WebServerToolWindowFactoryState": "false",
     "git-widget-placeholder": "kaizen",
     "go.import.settings.migrated": "true",
+    "go.sdk.automatically.set": "true",
     "last_opened_file_path": "/Users/kakitsuseiji",
     "node.js.detected.package.eslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
     "settings.editor.selected.configurable": "preferences.sourceCode.Go"
   },
   "keyToStringList": {
@@ -60,7 +71,8 @@
   <component name="RunManager">
     <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
       <working_directory value="$PROJECT_DIR$" />
-      <kind />
+      <kind value="PACKAGE" />
+      <package value="ut" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
       <method v="2" />
