@@ -1,0 +1,134 @@
+POST http://localhost:8050/user
+Content-Type: application/json
+Content-Length: 91
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.8.1)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+{
+  "class" : "document",
+  "title" : "post request",
+  "body" : "test",
+  "url" : "test"
+}
+
+<> 2023-11-03T181807.200.txt
+
+###
+
+POST http://localhost:8050/user
+Content-Type: application/json
+Content-Length: 91
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.8.1)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+{
+  "class" : "document",
+  "title" : "post request",
+  "body" : "test",
+  "url" : "test"
+}
+
+<> 2023-11-03T181758.200.txt
+
+###
+
+POST http://localhost:8050/user
+Content-Type: application/json
+Content-Length: 91
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.8.1)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+{
+  "class" : "document",
+  "title" : "post request",
+  "body" : "test",
+  "url" : "test"
+}
+
+###
+
+POST http://localhost:8050/user
+Content-Type: application/json
+Content-Length: 88
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.8.1)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+{
+  "class" : "movie",
+  "title" : "post request",
+  "body" : "test",
+  "url" : "test"
+}
+
+<> 2023-11-03T180928.200.txt
+
+###
+
+POST http://localhost:8050/user
+Content-Type: application/json
+Content-Length: 91
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.8.1)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+{
+  "class" : "document",
+  "title" : "post request",
+  "body" : "test",
+  "url" : "test"
+}
+
+###
+
+POST https://hackathon-backend-zjgwehekya-uc.a.run.app/user
+Content-Type: application/json
+Content-Length: 91
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.8.1)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+{
+  "class" : "document",
+  "title" : "post request",
+  "body" : "test",
+  "url" : "test"
+}
+
+###
+
+POST http://localhost:8050/user
+Content-Type: application/json
+Content-Length: 87
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.8.1)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+{
+  "class" : "taro",
+  "title" : "test",
+  "body" : "test!!!",
+  "url" : "test!!!!!"
+}
+
+###
+
+POST http://localhost:8000/user
+Content-Type: application/json
+Content-Length: 37
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.8.1)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+{
+  "name" : "ichiro",
+  "age" : 40
+}
+
+<> 2023-10-30T163010.200.txt
+
+###
+
