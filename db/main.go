@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"db/controller"
+	"db/dao"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
@@ -15,6 +16,7 @@ import (
 
 // ① GoプログラムからMySQLへ接続
 var db *sql.DB
+var userDao *dao.UserDAO
 
 func init() {
 	// Load environment variables from .env file
@@ -37,16 +39,17 @@ func init() {
 		log.Fatalf("fail: _db.Ping, %v\n", err)
 	}
 	db = _db
+
+	userDao = dao.NewUserDAO(db)
 }
 
 // ② /userでリクエストされたらnameパラメーターと一致する名前を持つレコードをJSON形式で返す
 func handler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		controller.SearchUserController(w, r)
+		controller.SearchUserController(w, r, db)
 	case http.MethodPost:
-		controller.RegisterUserController(w, r)
-
+		controller.RegisterUserController(w, r, db)
 	default:
 		log.Printf("fail: HTTP Method is %s\n", r.Method)
 		w.WriteHeader(http.StatusBadRequest)

@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"database/sql"
 	"db/model"
 	"db/usecase"
 	"encoding/json"
@@ -8,7 +9,7 @@ import (
 	"net/http"
 )
 
-func RegisterUserController(w http.ResponseWriter, r *http.Request) {
+func RegisterUserController(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&model.RequestData); err != nil {
 		log.Printf("fail: json.Decode, %v\n", err)
@@ -16,9 +17,10 @@ func RegisterUserController(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := usecase.RegisterUser()
+	id, err := usecase.RegisterUser(db)
 	if err != nil {
 		log.Printf("fail: %n\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 
 	// 成功した場合のレスポンス

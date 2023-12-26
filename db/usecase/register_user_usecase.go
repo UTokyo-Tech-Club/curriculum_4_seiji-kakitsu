@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"database/sql"
 	"db/dao"
 	"db/model"
 	"fmt"
@@ -23,15 +24,15 @@ func Validation() error {
 	return nil
 }
 
-func RegisterUser() (string, error) {
+func RegisterUser(db *sql.DB) (string, error) {
 	if err := Validation(); err != nil {
 		log.Printf("fail: Validation failed, %v\n", err)
 		return "", err
 	}
-	id, err := dao.CreateUser()
+	id, err := dao.CreateUser(db)
 	if err != nil {
 		log.Printf("fail: %v\n", err)
 		return "", err
 	}
-	return id, err
+	return id, nil
 }

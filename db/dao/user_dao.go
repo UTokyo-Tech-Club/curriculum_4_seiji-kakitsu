@@ -3,33 +3,11 @@ package dao
 import (
 	"database/sql"
 	"db/model"
-	"fmt"
 	"github.com/oklog/ulid/v2"
 	"log"
 	"math/rand"
-	"os"
 	"time"
 )
-
-var db *sql.DB
-
-func InitDB() {
-	// ①-1
-	mysqlUser := os.Getenv("MYSQL_USER")
-	mysqlUserPwd := os.Getenv("MYSQL_PASSWORD")
-	mysqlDatabase := os.Getenv("MYSQL_DATABASE")
-
-	// ①-2
-	_db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@(localhost:3306)/%s", mysqlUser, mysqlUserPwd, mysqlDatabase))
-	if err != nil {
-		log.Fatalf("fail: sql.Open, %v\n", err)
-	}
-	// ①-3
-	if err := _db.Ping(); err != nil {
-		log.Fatalf("fail: _db.Ping, %v\n", err)
-	}
-	db = _db
-}
 
 func HandleTransaction(tx *sql.Tx, err error) {
 	// 関数が終了する際にトランザクションをコミットまたはロールバック
@@ -50,24 +28,40 @@ func HandleTransaction(tx *sql.Tx, err error) {
 	}
 }
 
-func GetUserByName(name string) (*sql.Rows, error) {
-	// トランザクションを開始
+type UserDAO struct {
+	DB *sql.DB
+}
+
+func NewUserDAO(db *sql.DB) *UserDAO {
+	return &UserDAO{DB: db}
+}
+
+func GetUserByName(db *sql.DB, name string) ([]model.UserResForHTTPGet, error) {
 	tx, err := db.Begin()
 	if err != nil {
-		log.Printf("fail: db.Begin, %v\n", err)
+		log.Printf("fail: db.Begin(), %v\n", err)
 		return nil, err
 	}
 	defer HandleTransaction(tx, err)
-
 	rows, err := tx.Query("SELECT id, name, age FROM user WHERE name = ?", name)
 	if err != nil {
 		log.Printf("fail: tx.Query, %v\n", err)
 		return nil, err
 	}
-	return rows, err
+	defer rows.Close()
+
+	users := make([]model.UserResForHTTPGet, 0)
+	for rows.Next() {
+		var u model.UserResForHTTPGet
+		if err := rows.Scan(&u.Id, &u.Name, &u.Age); err != nil {
+			return nil, err
+		}
+		users = append(users, u)
+	}
+	return users, nil
 }
 
-func CreateUser() (string, error) {
+func CreateUser(db *sql.DB) (string, error) {
 	// トランザクションを開始
 	tx, err := db.Begin()
 	if err != nil {

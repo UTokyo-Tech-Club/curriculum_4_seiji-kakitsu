@@ -3,14 +3,15 @@ package usecase
 import (
 	"database/sql"
 	"db/dao"
+	"db/model"
 	"log"
 )
 
-func SearchUser(name string) *sql.Rows {
-	rows, err := dao.GetUserByName(name)
+func SearchUser(db *sql.DB, name string) ([]model.UserResForHTTPGet, error) {
+	users, err := dao.GetUserByName(db, name)
 	if err != nil {
 		log.Printf("fail: %v\n", err)
-		return nil
+		return nil, err
 	}
-	return rows
+	return users, nil
 }
