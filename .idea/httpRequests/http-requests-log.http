@@ -1,0 +1,16 @@
+POST http://localhost:8000/user
+Content-Type: application/json
+Content-Length: 37
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.5.14 (Java/17.0.8.1)
+Accept-Encoding: br,deflate,gzip,x-gzip
+
+{
+  "name" : "ichiro",
+  "age" : 40
+}
+
+<> 2023-12-26T135609.200.txt
+
+###
+
