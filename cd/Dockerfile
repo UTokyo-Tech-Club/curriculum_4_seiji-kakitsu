@@ -1,0 +1,9 @@
+FROM golang:1.18 as build
+WORKDIR /app
+COPY . .
+EXPOSE 8000
+RUN go build main.go
+CMD ["./main"]
+
+# docker run -p 8000:8000 exampleと打つと成功する
+# docker run example　だとうまくいかない
